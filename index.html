@@ -381,26 +381,27 @@
     border: 1px solid var(--line);
     color: var(--text-dim);
   }
-  .qty-stepper{
-    display:flex; align-items:center; gap:.8rem;
-    margin-top: .3rem;
+  .variant-chips{
+    display:flex; flex-wrap:wrap; gap:.5rem;
+    margin-top: .5rem;
   }
-  .qty-btn{
-    width:38px; height:38px;
-    border-radius:9px;
-    border:1px solid var(--line);
-    background: var(--panel-raised);
-    color: var(--text);
-    font-size: 1.2rem;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-  }
-  .qty-value{
+  .variant-chip{
     font-family:'JetBrains Mono',monospace;
-    font-size:1.3rem;
-    font-weight:600;
-    min-width: 2ch;
-    text-align:center;
+    font-size:.78rem;
+    padding: .55rem .8rem;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--text-dim);
+    cursor:pointer;
+    user-select:none;
+    transition: all .12s ease;
+  }
+  .variant-chip.owned{
+    background: var(--card-sheet-color, var(--vigilance));
+    border-color: var(--card-sheet-color, var(--vigilance));
+    color: white;
+    font-weight: 600;
   }
   .sheet-close{
     position:absolute;
@@ -553,11 +554,7 @@
       <p class="sheet-name" id="sheet-name"></p>
       <p class="sheet-subtitle" id="sheet-subtitle"></p>
       <div class="sheet-tags" id="sheet-tags"></div>
-      <div class="qty-stepper">
-        <div class="qty-btn" id="qty-minus">−</div>
-        <div class="qty-value mono" id="qty-value">0</div>
-        <div class="qty-btn" id="qty-plus">+</div>
-      </div>
+      <div class="variant-chips" id="variant-chips"></div>
     </div>
   </div>
 </div>
@@ -712,7 +709,7 @@
       for (const a of activeAspects) if (cardAspects.has(a)) hit = true;
       if (!hit) return false;
     }
-    const owned = (collection[card.cid] || 0) > 0;
+    const owned = (collection[card.cid] && collection[card.cid].length > 0);
     if (filterMode === "owned" && !owned) return false;
     if (filterMode === "missing" && owned) return false;
     return true;
@@ -757,7 +754,7 @@
 
     allSetData.forEach(set => {
       const filteredCards = set.cards.filter(matchesFilters);
-      const ownedInSet = set.cards.filter(c => (collection[c.cid]||0) > 0).length;
+      const ownedInSet = set.cards.filter(c => collection[c.cid] && collection[c.cid].length > 0).length;
       const totalInSet = set.cards.length;
       totalUnique += totalInSet;
       totalOwned += ownedInSet;
@@ -799,10 +796,12 @@
       }
 
       filteredCards.forEach(card => {
-        const qty = collection[card.cid] || 0;
-        const owned = qty > 0;
+        const ownedVariants = collection[card.cid] || [];
+        const owned = ownedVariants.length > 0;
         const color = cardColor(card);
         const rColor = RARITY_COLOR[card.Rarity] || "#8a919c";
+        const variantAbbrev = { "Normal": "N", "Foil": "F", "Hyperspace": "HS", "Hyperspace Foil": "HSF", "Showcase": "SC" };
+        const badgeText = ownedVariants.map(v => variantAbbrev[v] || v).join(" ");
 
         const tile = document.createElement("div");
         tile.className = "card-tile" + (owned ? " owned" : "");
@@ -810,7 +809,7 @@
         tile.innerHTML = `
           <div class="card-art-wrap">
             <img loading="lazy" src="${card.FrontArt || ''}" alt="${card.Name}">
-            <div class="qty-badge">×${qty}</div>
+            <div class="qty-badge">${badgeText}</div>
             <div class="owned-badge"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="card-info">
@@ -838,11 +837,34 @@
   const sheetBackdrop = document.getElementById("sheet-backdrop");
   const sheet = document.getElementById("sheet");
 
+  function renderVariantChips(card){
+    const container = document.getElementById("variant-chips");
+    container.innerHTML = "";
+    const owned = new Set(collection[card.cid] || []);
+    const variants = card.Variants && card.Variants.length ? card.Variants : ["Normal"];
+    variants.forEach(variantType => {
+      const chip = document.createElement("div");
+      chip.className = "variant-chip" + (owned.has(variantType) ? " owned" : "");
+      chip.textContent = variantType;
+      chip.addEventListener("click", () => {
+        const current = new Set(collection[card.cid] || []);
+        if (current.has(variantType)) current.delete(variantType);
+        else current.add(variantType);
+        if (current.size === 0) delete collection[card.cid];
+        else collection[card.cid] = Array.from(current);
+        saveCollection();
+        renderVariantChips(card);
+      });
+      container.appendChild(chip);
+    });
+  }
+
   function openSheet(card){
     sheetCard = card;
     document.getElementById("sheet-img").src = card.FrontArt || "";
     document.getElementById("sheet-name").textContent = card.Name;
     document.getElementById("sheet-subtitle").textContent = card.Subtitle || "";
+    document.getElementById("sheet").style.setProperty("--card-sheet-color", cardColor(card));
     const tags = document.getElementById("sheet-tags");
     tags.innerHTML = "";
     [card.Set + " · " + card.Number, card.Type, card.Rarity, ...(card.Aspects||[])].filter(Boolean).forEach(t => {
@@ -851,7 +873,7 @@
       el.textContent = t;
       tags.appendChild(el);
     });
-    document.getElementById("qty-value").textContent = collection[card.cid] || 0;
+    renderVariantChips(card);
     sheetBackdrop.classList.add("open");
     sheet.classList.add("open");
   }
@@ -862,20 +884,6 @@
   }
   document.getElementById("sheet-close").addEventListener("click", closeSheet);
   sheetBackdrop.addEventListener("click", closeSheet);
-
-  document.getElementById("qty-plus").addEventListener("click", () => {
-    if (!sheetCard) return;
-    collection[sheetCard.cid] = (collection[sheetCard.cid]||0) + 1;
-    document.getElementById("qty-value").textContent = collection[sheetCard.cid];
-    saveCollection();
-  });
-  document.getElementById("qty-minus").addEventListener("click", () => {
-    if (!sheetCard) return;
-    collection[sheetCard.cid] = Math.max(0, (collection[sheetCard.cid]||0) - 1);
-    if (collection[sheetCard.cid] === 0) delete collection[sheetCard.cid];
-    document.getElementById("qty-value").textContent = collection[sheetCard.cid] || 0;
-    saveCollection();
-  });
 
   // ---------- Search / filters ----------
   document.getElementById("search-input").addEventListener("input", (e) => {
