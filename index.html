@@ -654,8 +654,18 @@
         let json;
         if (LOCAL_SETS.has(code)){
           const res = await fetch(`./data/${code}.json`);
-          if (!res.ok) { lastError = `Local data file missing for ${code}`; render(); renderSetJumpChips(); continue; }
-          json = await res.json();
+          if (!res.ok) { lastError = `Local data file missing for ${code} (status ${res.status})`; render(); renderSetJumpChips(); continue; }
+          const rawText = await res.text();
+          if (!rawText || rawText.trim().length === 0){
+            lastError = `Local data file for ${code} was empty`;
+            render(); renderSetJumpChips(); continue;
+          }
+          try{
+            json = JSON.parse(rawText);
+          }catch(parseErr){
+            lastError = `Couldn't parse ${code}.json — got: "${rawText.slice(0, 120)}"`;
+            render(); renderSetJumpChips(); continue;
+          }
         } else {
           const apiUrl = `https://api.swu-db.com/cards/${code}`;
           const proxiedUrl = `https://corsproxy.io/?url=${encodeURIComponent(apiUrl)}`;
