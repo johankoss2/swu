@@ -673,6 +673,11 @@
           json = await res.json();
         }
         const cards = (json.data || []).filter(c => c.VariantType === "Normal" || !c.VariantType);
+        cards.sort((a, b) => {
+          const numA = parseInt((a.Number || "0").replace(/\D/g, ""), 10) || 0;
+          const numB = parseInt((b.Number || "0").replace(/\D/g, ""), 10) || 0;
+          return numA - numB;
+        });
         allSetData.push({ code, name, cards });
       }catch(e){
         lastError = e && e.message ? e.message : String(e);
