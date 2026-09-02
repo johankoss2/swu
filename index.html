@@ -625,19 +625,36 @@
   const setsContainer = document.getElementById("sets-container");
   const statusLine = document.getElementById("status-line");
 
+  async function fetchWithRetry(url, attempts = 3){
+    let lastErr;
+    for (let i = 0; i < attempts; i++){
+      try{
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        return res;
+      }catch(e){
+        lastErr = e;
+        if (i < attempts - 1) await new Promise(r => setTimeout(r, 800));
+      }
+    }
+    throw lastErr;
+  }
+
   async function loadAllSets(){
     let lastError = null;
     for (const [code, name] of SETS){
       try{
         statusLine.textContent = `Loading ${name}…`;
-        const res = await fetch(`https://api.swu-db.com/cards/${code}`);
+        const res = await fetchWithRetry(`https://api.swu-db.com/cards/${code}`);
         if (!res.ok) {
           lastError = `Server responded with status ${res.status} for ${code}`;
-          continue;
+        } else {
+          const json = await res.json();
+          const cards = (json.data || []).filter(c => c.VariantType === "Normal" || !c.VariantType);
+          allSetData.push({ code, name, cards });
         }
-        const json = await res.json();
-        const cards = (json.data || []).filter(c => c.VariantType === "Normal" || !c.VariantType);
-        allSetData.push({ code, name, cards });
       }catch(e){
         lastError = e && e.message ? e.message : String(e);
         console.error("Failed to load set", code, e);
