@@ -626,21 +626,29 @@
   const statusLine = document.getElementById("status-line");
 
   async function loadAllSets(){
+    let lastError = null;
     for (const [code, name] of SETS){
       try{
+        statusLine.textContent = `Loading ${name}…`;
         const res = await fetch(`https://api.swu-db.com/cards/${code}`);
-        if (!res.ok) continue;
+        if (!res.ok) {
+          lastError = `Server responded with status ${res.status} for ${code}`;
+          continue;
+        }
         const json = await res.json();
         const cards = (json.data || []).filter(c => c.VariantType === "Normal" || !c.VariantType);
         allSetData.push({ code, name, cards });
       }catch(e){
+        lastError = e && e.message ? e.message : String(e);
         console.error("Failed to load set", code, e);
       }
       render();
       renderSetJumpChips();
     }
     if (allSetData.length === 0){
-      statusLine.textContent = "Couldn't reach the card database. Check your connection and reload.";
+      statusLine.textContent = lastError
+        ? `Couldn't load card data. Error: ${lastError}`
+        : "Couldn't reach the card database. Check your connection and reload.";
     }
   }
 
