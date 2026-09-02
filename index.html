@@ -580,14 +580,15 @@
 
   // Sets to load, in release order. Code -> display name.
   const SETS = [
-    ["sor", "Spark of Rebellion"],
-    ["shd", "Shadows of the Galaxy"],
-    ["twi", "Twilight of the Republic"],
-    ["jtl", "Jump to Lightspeed"],
-    ["lof", "Legends of the Force"],
-    ["sec", "Secrets of Power"],
-    ["law", "A Lawless Time"],
-    ["ash", "Ashes of the Empire"]
+    ["sor", "Spark of Rebellion"]
+    // Other sets temporarily disabled while we debug loading.
+    // ["shd", "Shadows of the Galaxy"],
+    // ["twi", "Twilight of the Republic"],
+    // ["jtl", "Jump to Lightspeed"],
+    // ["lof", "Legends of the Force"],
+    // ["sec", "Secrets of Power"],
+    // ["law", "A Lawless Time"],
+    // ["ash", "Ashes of the Empire"]
   ];
 
   const ASPECT_COLOR = {
@@ -625,9 +626,10 @@
   const setsContainer = document.getElementById("sets-container");
   const statusLine = document.getElementById("status-line");
 
-  async function fetchWithRetry(url, attempts = 3){
+  async function fetchWithRetry(url, attempts = 3, onAttempt){
     let lastErr;
     for (let i = 0; i < attempts; i++){
+      if (onAttempt) onAttempt(i + 1, attempts);
       try{
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
@@ -635,7 +637,7 @@
         clearTimeout(timeout);
         return res;
       }catch(e){
-        lastErr = e;
+        lastErr = (e && e.name === "AbortError") ? new Error("Request timed out after 15s") : e;
         if (i < attempts - 1) await new Promise(r => setTimeout(r, 800));
       }
     }
@@ -647,7 +649,9 @@
     for (const [code, name] of SETS){
       try{
         statusLine.textContent = `Loading ${name}…`;
-        const res = await fetchWithRetry(`https://api.swu-db.com/cards/${code}`);
+        const res = await fetchWithRetry(`https://api.swu-db.com/cards/${code}`, 3, (attempt, total) => {
+          if (attempt > 1) statusLine.textContent = `Loading ${name}… (attempt ${attempt}/${total})`;
+        });
         if (!res.ok) {
           lastError = `Server responded with status ${res.status} for ${code}`;
         } else {
