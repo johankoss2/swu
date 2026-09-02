@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Holotable — SWU Collection</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg: #0b0d10;
+    --panel: #14171c;
+    --panel-raised: #1a1e24;
+    --line: #262b32;
+    --text: #e8eaed;
+    --text-dim: #8a919c;
+    --text-faint: #565d67;
+
+    --aggression: #d64545;
+    --command: #3f9142;
+    --vigilance: #3a7bc8;
+    --cunning: #d9a324;
+    --heroism: #e8eaed;
+    --villainy: #7a3fb0;
+
+    --accent: var(--vigilance);
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 4rem;
+  }
+  .mono{ font-family: 'JetBrains Mono', monospace; }
+
+  a{ color: inherit; }
+
+  /* ---------- Header / hero ---------- */
+  header.hero{
+    position: relative;
+    padding: 2.4rem 1.25rem 1.6rem;
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse 120% 80% at 50% -20%, rgba(58,123,200,0.16), transparent 60%),
+      var(--bg);
+  }
+  .eyebrow-row{
+    display:flex; align-items:center; gap:.6rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:.72rem;
+    color: var(--text-faint);
+    letter-spacing: .02em;
+    margin-bottom: .9rem;
+  }
+  .eyebrow-row .dot{
+    width:6px;height:6px;border-radius:50%;
+    background: var(--vigilance);
+    box-shadow: 0 0 8px var(--vigilance);
+  }
+  h1.title{
+    font-size: 1.9rem;
+    line-height: 1.15;
+    font-weight: 700;
+    margin: 0 0 .3rem;
+    letter-spacing: -0.01em;
+  }
+  h1.title .sub{
+    display:block;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text-dim);
+    margin-top: .25rem;
+  }
+
+  .global-stat{
+    margin-top: 1.4rem;
+    display:flex;
+    align-items: baseline;
+    gap: .9rem;
+  }
+  .global-stat .num{
+    font-family:'JetBrains Mono',monospace;
+    font-weight: 600;
+    font-size: 2.6rem;
+    color: var(--text);
+    line-height:1;
+  }
+  .global-stat .num span.of{
+    color: var(--text-faint);
+    font-size: 1.3rem;
+  }
+  .global-stat .label{
+    font-size: .85rem;
+    color: var(--text-dim);
+  }
+  .global-bar{
+    margin-top: .9rem;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--panel-raised);
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .global-bar > div{
+    height: 100%;
+    background: linear-gradient(90deg, var(--vigilance), var(--cunning));
+    transition: width .4s ease;
+  }
+
+  /* ---------- Controls ---------- */
+  .controls{
+    padding: 1rem 1.25rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: .7rem;
+  }
+  input[type="search"]{
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: .75rem .9rem;
+    border-radius: 10px;
+    font-size: .95rem;
+    font-family: inherit;
+  }
+  input[type="search"]:focus{
+    outline: none;
+    border-color: var(--vigilance);
+  }
+  input[type="search"]::placeholder{ color: var(--text-faint); }
+
+  .chip-row{
+    display:flex;
+    gap:.5rem;
+    overflow-x:auto;
+    padding-bottom: .2rem;
+    scrollbar-width: none;
+  }
+  .chip-row::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex: 0 0 auto;
+    font-family:'JetBrains Mono',monospace;
+    font-size: .74rem;
+    padding: .45rem .75rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text-dim);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip.active{
+    background: var(--panel-raised);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .filter-toggle-row{
+    display:flex;
+    gap:.5rem;
+  }
+  .toggle-btn{
+    flex:1;
+    padding: .55rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: .8rem;
+    cursor: pointer;
+  }
+  .toggle-btn.active{
+    background: var(--panel-raised);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  /* ---------- Set section ---------- */
+  .set-section{
+    margin-top: 1.8rem;
+  }
+  .set-header{
+    padding: 0 1.25rem;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .7rem;
+    cursor: pointer;
+  }
+  .set-header-left{
+    display:flex;
+    flex-direction:column;
+    gap:.25rem;
+  }
+  .set-name{
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .set-progress-text{
+    font-family:'JetBrains Mono',monospace;
+    font-size: .72rem;
+    color: var(--text-dim);
+  }
+  .set-ring{
+    position: relative;
+    width: 40px;
+    height: 40px;
+    flex-shrink:0;
+  }
+  .set-ring svg{ transform: rotate(-90deg); }
+  .set-ring circle.track{ stroke: var(--line); fill:none; }
+  .set-ring circle.fill{ stroke: var(--vigilance); fill:none; stroke-linecap: round; transition: stroke-dashoffset .4s ease; }
+  .set-ring .pct{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size: .62rem;
+    color: var(--text-dim);
+  }
+  .chevron{
+    color: var(--text-faint);
+    transition: transform .25s ease;
+    flex-shrink:0;
+  }
+  .set-section.collapsed .chevron{ transform: rotate(-90deg); }
+
+  .card-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: .6rem;
+    padding: 0 1.25rem;
+  }
+  .set-section.collapsed .card-grid{ display:none; }
+
+  .card-tile{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow:hidden;
+    cursor:pointer;
+    position:relative;
+    transition: border-color .15s ease, transform .1s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card-tile:active{ transform: scale(0.97); }
+  .card-tile.owned{
+    border-color: var(--card-color, var(--vigilance));
+  }
+  .card-art-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 5/7;
+    background: var(--panel-raised);
+    overflow:hidden;
+  }
+  .card-art-wrap img{
+    width:100%; height:100%;
+    object-fit: cover;
+    display:block;
+    filter: saturate(0.75) brightness(0.72);
+    transition: filter .2s ease;
+  }
+  .card-tile.owned .card-art-wrap img{
+    filter: none;
+  }
+  .owned-badge{
+    position:absolute;
+    top: 6px; right: 6px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--card-color, var(--vigilance));
+    display:flex; align-items:center; justify-content:center;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all .15s ease;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.4);
+  }
+  .card-tile.owned .owned-badge{ opacity:1; transform: scale(1); }
+  .owned-badge svg{ width:13px; height:13px; }
+
+  .qty-badge{
+    position:absolute;
+    top:6px; left:6px;
+    background: rgba(11,13,16,0.85);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size: .68rem;
+    padding: .1rem .4rem;
+    border-radius: 6px;
+    display:none;
+  }
+  .card-tile.owned .qty-badge{ display:block; }
+
+  .card-info{
+    padding: .55rem .6rem .65rem;
+  }
+  .card-name{
+    font-size: .78rem;
+    font-weight: 600;
+    line-height:1.25;
+    margin:0 0 .15rem;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+  .card-meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size: .64rem;
+    color: var(--text-faint);
+    display:flex;
+    justify-content: space-between;
+  }
+
+  .rarity-dot{
+    width:7px; height:7px; border-radius:50%;
+    display:inline-block;
+    margin-right:.3rem;
+    vertical-align:middle;
+  }
+
+  /* ---------- Card detail sheet ---------- */
+  .sheet-backdrop{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.6);
+    z-index: 50;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .2s ease;
+  }
+  .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    z-index: 51;
+    transform: translateY(100%);
+    transition: transform .25s cubic-bezier(.32,.72,0,1);
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 1.1rem 1.25rem 1.6rem;
+  }
+  .sheet.open{ transform: translateY(0); }
+  .sheet-grabber{
+    width:36px; height:4px; border-radius:2px;
+    background: var(--line);
+    margin: 0 auto .9rem;
+  }
+  .sheet-body{
+    display:flex;
+    gap: 1rem;
+  }
+  .sheet-art{
+    width: 130px;
+    flex-shrink:0;
+    border-radius: 10px;
+    overflow:hidden;
+    background: var(--panel-raised);
+  }
+  .sheet-art img{ width:100%; display:block; }
+  .sheet-details{ flex:1; min-width:0; }
+  .sheet-name{ font-size:1.15rem; font-weight:700; margin:0 0 .15rem; line-height:1.2; }
+  .sheet-subtitle{ font-size:.85rem; color:var(--text-dim); margin:0 0 .6rem; }
+  .sheet-tags{ display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:.8rem; }
+  .sheet-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:.66rem;
+    padding:.2rem .5rem;
+    border-radius:6px;
+    background: var(--panel-raised);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+  }
+  .qty-stepper{
+    display:flex; align-items:center; gap:.8rem;
+    margin-top: .3rem;
+  }
+  .qty-btn{
+    width:38px; height:38px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--text);
+    font-size: 1.2rem;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .qty-value{
+    font-family:'JetBrains Mono',monospace;
+    font-size:1.3rem;
+    font-weight:600;
+    min-width: 2ch;
+    text-align:center;
+  }
+  .sheet-close{
+    position:absolute;
+    top: 1rem; right: 1.1rem;
+    width:30px; height:30px;
+    border-radius:50%;
+    background: var(--panel-raised);
+    border:1px solid var(--line);
+    color: var(--text-dim);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+
+  /* ---------- Bottom bar ---------- */
+  .bottombar{
+    position: fixed;
+    bottom:0; left:0; right:0;
+    background: rgba(20,23,28,0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    padding: .7rem 1.25rem calc(.7rem + env(safe-area-inset-bottom));
+    display:flex;
+    gap: .6rem;
+    z-index: 40;
+  }
+  .bar-btn{
+    flex:1;
+    padding: .65rem;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--text);
+    font-family: inherit;
+    font-size: .8rem;
+    font-weight:500;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:.4rem;
+  }
+  .bar-btn.primary{
+    background: var(--vigilance);
+    border-color: var(--vigilance);
+    color: white;
+  }
+
+  .status-line{
+    padding: 3rem 1.25rem;
+    text-align:center;
+    color: var(--text-faint);
+    font-family:'JetBrains Mono',monospace;
+    font-size: .8rem;
+  }
+
+  .empty-hint{
+    padding: 2rem 1.25rem;
+    text-align:center;
+    color: var(--text-faint);
+    font-size: .85rem;
+  }
+
+  /* import/export modal */
+  .modal-backdrop{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.7);
+    z-index: 60;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 1.25rem;
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.25rem;
+    max-width: 480px;
+    width:100%;
+    max-height: 80vh;
+    overflow-y:auto;
+  }
+  .modal h3{ margin:0 0 .3rem; font-size:1.05rem; }
+  .modal p{ color:var(--text-dim); font-size:.8rem; margin:0 0 .8rem; line-height:1.5; }
+  .modal textarea{
+    width:100%;
+    height: 140px;
+    background: var(--bg);
+    border:1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size: .72rem;
+    padding: .6rem;
+    resize: vertical;
+  }
+  .modal .modal-btns{ display:flex; gap:.5rem; margin-top:.8rem; }
+  .modal button{
+    flex:1;
+    padding:.6rem;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background: var(--panel-raised);
+    color: var(--text);
+    font-family: inherit;
+    cursor:pointer;
+    font-size:.82rem;
+  }
+  .modal button.primary{ background: var(--vigilance); border-color: var(--vigilance); color:white; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow-row"><span class="dot"></span><span>HOLOTABLE · COLLECTION LOG</span></div>
+  <h1 class="title">Star Wars: Unlimited
+    <span class="sub">Your collection, catalogued by set.</span>
+  </h1>
+  <div class="global-stat">
+    <div class="num mono" id="global-owned">0<span class="of">/0</span></div>
+    <div class="label">unique cards owned<br>across all sets</div>
+  </div>
+  <div class="global-bar"><div id="global-bar-fill" style="width:0%"></div></div>
+</header>
+
+<div class="controls">
+  <input type="search" id="search-input" placeholder="Search cards by name, trait, type…">
+  <div class="chip-row" id="aspect-chips"></div>
+  <div class="filter-toggle-row">
+    <div class="toggle-btn" id="toggle-owned">Owned only</div>
+    <div class="toggle-btn" id="toggle-missing">Plan (still need)</div>
+  </div>
+  <div class="chip-row" id="set-jump-chips"></div>
+</div>
+
+<div id="sets-container">
+  <div class="status-line" id="status-line">Loading card data from swu-db.com…</div>
+</div>
+
+<div class="bottombar">
+  <button class="bar-btn" id="btn-export">Export backup</button>
+  <button class="bar-btn" id="btn-import">Import</button>
+</div>
+
+<div class="sheet-backdrop" id="sheet-backdrop"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-close" id="sheet-close">✕</div>
+  <div class="sheet-grabber"></div>
+  <div class="sheet-body">
+    <div class="sheet-art"><img id="sheet-img" src="" alt=""></div>
+    <div class="sheet-details">
+      <p class="sheet-name" id="sheet-name"></p>
+      <p class="sheet-subtitle" id="sheet-subtitle"></p>
+      <div class="sheet-tags" id="sheet-tags"></div>
+      <div class="qty-stepper">
+        <div class="qty-btn" id="qty-minus">−</div>
+        <div class="qty-value mono" id="qty-value">0</div>
+        <div class="qty-btn" id="qty-plus">+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <h3 id="modal-title">Export your collection</h3>
+    <p id="modal-desc">Copy this and paste it into a file in your GitLab repo (e.g. <span class="mono">collection-backup.json</span>) to back it up or move it to another device.</p>
+    <textarea id="modal-textarea" spellcheck="false"></textarea>
+    <div class="modal-btns">
+      <button id="modal-cancel">Close</button>
+      <button class="primary" id="modal-action">Copy to clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Sets to load, in release order. Code -> display name.
+  const SETS = [
+    ["sor", "Spark of Rebellion"],
+    ["shd", "Shadows of the Galaxy"],
+    ["twi", "Twilight of the Republic"],
+    ["jtl", "Jump to Lightspeed"],
+    ["lof", "Legends of the Force"],
+    ["sec", "Secrets of Power"],
+    ["law", "A Lawless Time"],
+    ["ash", "Ashes of the Empire"]
+  ];
+
+  const ASPECT_COLOR = {
+    "Aggression": "var(--aggression)",
+    "Command": "var(--command)",
+    "Vigilance": "var(--vigilance)",
+    "Cunning": "var(--cunning)",
+    "Heroism": "var(--heroism)",
+    "Villainy": "var(--villainy)"
+  };
+  const RARITY_COLOR = {
+    "Common": "#8a919c",
+    "Uncommon": "#3f9142",
+    "Rare": "#3a7bc8",
+    "Legendary": "#d9a324",
+    "Special": "#d64545"
+  };
+
+  const STORAGE_KEY = "swu-collection-v1";
+  let collection = {}; // cid -> qty
+  try {
+    collection = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  } catch(e){ collection = {}; }
+
+  function saveCollection(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
+  }
+
+  let allSetData = []; // [{code,name,cards:[]}]
+  let activeAspects = new Set();
+  let searchTerm = "";
+  let filterMode = "all"; // all | owned | missing
+  let collapsedSets = new Set();
+
+  const setsContainer = document.getElementById("sets-container");
+  const statusLine = document.getElementById("status-line");
+
+  async function loadAllSets(){
+    for (const [code, name] of SETS){
+      try{
+        const res = await fetch(`https://api.swu-db.com/cards/${code}`);
+        if (!res.ok) continue;
+        const json = await res.json();
+        const cards = (json.data || []).filter(c => c.VariantType === "Normal" || !c.VariantType);
+        allSetData.push({ code, name, cards });
+      }catch(e){
+        console.error("Failed to load set", code, e);
+      }
+      render();
+      renderSetJumpChips();
+    }
+    if (allSetData.length === 0){
+      statusLine.textContent = "Couldn't reach the card database. Check your connection and reload.";
+    }
+  }
+
+  function primaryAspect(card){
+    if (!card.Aspects || card.Aspects.length === 0) return null;
+    return card.Aspects.find(a => ASPECT_COLOR[a]) || card.Aspects[0];
+  }
+
+  function cardColor(card){
+    const a = primaryAspect(card);
+    return a && ASPECT_COLOR[a] ? ASPECT_COLOR[a] : "var(--vigilance)";
+  }
+
+  function matchesFilters(card){
+    if (searchTerm){
+      const hay = [card.Name, card.Subtitle, card.Type, ...(card.Traits||[])].join(" ").toLowerCase();
+      if (!hay.includes(searchTerm)) return false;
+    }
+    if (activeAspects.size > 0){
+      const cardAspects = new Set(card.Aspects || []);
+      let hit = false;
+      for (const a of activeAspects) if (cardAspects.has(a)) hit = true;
+      if (!hit) return false;
+    }
+    const owned = (collection[card.cid] || 0) > 0;
+    if (filterMode === "owned" && !owned) return false;
+    if (filterMode === "missing" && owned) return false;
+    return true;
+  }
+
+  function renderAspectChips(){
+    const row = document.getElementById("aspect-chips");
+    row.innerHTML = "";
+    Object.keys(ASPECT_COLOR).forEach(aspect => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (activeAspects.has(aspect) ? " active" : "");
+      chip.textContent = aspect;
+      chip.style.borderColor = activeAspects.has(aspect) ? ASPECT_COLOR[aspect] : "";
+      chip.addEventListener("click", () => {
+        if (activeAspects.has(aspect)) activeAspects.delete(aspect);
+        else activeAspects.add(aspect);
+        renderAspectChips();
+        render();
+      });
+      row.appendChild(chip);
+    });
+  }
+
+  function svgRing(pct, color){
+    const r = 16, c = 2*Math.PI*r;
+    const offset = c * (1 - pct/100);
+    return `<svg width="40" height="40" viewBox="0 0 40 40">
+      <circle class="track" cx="20" cy="20" r="${r}" stroke-width="4"></circle>
+      <circle class="fill" cx="20" cy="20" r="${r}" stroke-width="4" stroke="${color}"
+        stroke-dasharray="${c}" stroke-dashoffset="${offset}"></circle>
+    </svg>`;
+  }
+
+  function render(){
+    let totalUnique = 0, totalOwned = 0;
+
+    setsContainer.innerHTML = "";
+    if (allSetData.length === 0){
+      setsContainer.appendChild(statusLine);
+      return;
+    }
+
+    allSetData.forEach(set => {
+      const filteredCards = set.cards.filter(matchesFilters);
+      const ownedInSet = set.cards.filter(c => (collection[c.cid]||0) > 0).length;
+      const totalInSet = set.cards.length;
+      totalUnique += totalInSet;
+      totalOwned += ownedInSet;
+      const pct = totalInSet ? Math.round(100 * ownedInSet / totalInSet) : 0;
+
+      if (filteredCards.length === 0 && (searchTerm || activeAspects.size || filterMode !== "all")) return;
+
+      const section = document.createElement("div");
+      section.className = "set-section" + (collapsedSets.has(set.code) ? " collapsed" : "");
+      section.dataset.setCode = set.code;
+
+      const header = document.createElement("div");
+      header.className = "set-header";
+      header.innerHTML = `
+        <div class="set-header-left">
+          <div class="set-name">${set.name}</div>
+          <div class="set-progress-text">${ownedInSet} / ${totalInSet} owned</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <div class="set-ring">${svgRing(pct, "var(--vigilance)")}<div class="pct">${pct}%</div></div>
+          <div class="chevron">▾</div>
+        </div>
+      `;
+      header.addEventListener("click", () => {
+        if (collapsedSets.has(set.code)) collapsedSets.delete(set.code);
+        else collapsedSets.add(set.code);
+        render();
+      });
+      section.appendChild(header);
+
+      const grid = document.createElement("div");
+      grid.className = "card-grid";
+
+      if (filteredCards.length === 0){
+        const hint = document.createElement("div");
+        hint.className = "empty-hint";
+        hint.textContent = "No cards match your filters in this set.";
+        grid.appendChild(hint);
+      }
+
+      filteredCards.forEach(card => {
+        const qty = collection[card.cid] || 0;
+        const owned = qty > 0;
+        const color = cardColor(card);
+        const rColor = RARITY_COLOR[card.Rarity] || "#8a919c";
+
+        const tile = document.createElement("div");
+        tile.className = "card-tile" + (owned ? " owned" : "");
+        tile.style.setProperty("--card-color", color);
+        tile.innerHTML = `
+          <div class="card-art-wrap">
+            <img loading="lazy" src="${card.FrontArt || ''}" alt="${card.Name}">
+            <div class="qty-badge">×${qty}</div>
+            <div class="owned-badge"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div class="card-info">
+            <p class="card-name">${card.Name}</p>
+            <div class="card-meta">
+              <span><span class="rarity-dot" style="background:${rColor}"></span>${card.Rarity || ""}</span>
+              <span>${card.Cost !== undefined && card.Cost !== "" ? "⬡"+card.Cost : ""}</span>
+            </div>
+          </div>
+        `;
+        tile.addEventListener("click", () => openSheet(card));
+        grid.appendChild(tile);
+      });
+
+      section.appendChild(grid);
+      setsContainer.appendChild(section);
+    });
+
+    document.getElementById("global-owned").innerHTML = `${totalOwned}<span class="of">/${totalUnique}</span>`;
+    document.getElementById("global-bar-fill").style.width = totalUnique ? (100*totalOwned/totalUnique)+"%" : "0%";
+  }
+
+  // ---------- Detail sheet ----------
+  let sheetCard = null;
+  const sheetBackdrop = document.getElementById("sheet-backdrop");
+  const sheet = document.getElementById("sheet");
+
+  function openSheet(card){
+    sheetCard = card;
+    document.getElementById("sheet-img").src = card.FrontArt || "";
+    document.getElementById("sheet-name").textContent = card.Name;
+    document.getElementById("sheet-subtitle").textContent = card.Subtitle || "";
+    const tags = document.getElementById("sheet-tags");
+    tags.innerHTML = "";
+    [card.Set + " · " + card.Number, card.Type, card.Rarity, ...(card.Aspects||[])].filter(Boolean).forEach(t => {
+      const el = document.createElement("span");
+      el.className = "sheet-tag";
+      el.textContent = t;
+      tags.appendChild(el);
+    });
+    document.getElementById("qty-value").textContent = collection[card.cid] || 0;
+    sheetBackdrop.classList.add("open");
+    sheet.classList.add("open");
+  }
+  function closeSheet(){
+    sheetBackdrop.classList.remove("open");
+    sheet.classList.remove("open");
+    render();
+  }
+  document.getElementById("sheet-close").addEventListener("click", closeSheet);
+  sheetBackdrop.addEventListener("click", closeSheet);
+
+  document.getElementById("qty-plus").addEventListener("click", () => {
+    if (!sheetCard) return;
+    collection[sheetCard.cid] = (collection[sheetCard.cid]||0) + 1;
+    document.getElementById("qty-value").textContent = collection[sheetCard.cid];
+    saveCollection();
+  });
+  document.getElementById("qty-minus").addEventListener("click", () => {
+    if (!sheetCard) return;
+    collection[sheetCard.cid] = Math.max(0, (collection[sheetCard.cid]||0) - 1);
+    if (collection[sheetCard.cid] === 0) delete collection[sheetCard.cid];
+    document.getElementById("qty-value").textContent = collection[sheetCard.cid] || 0;
+    saveCollection();
+  });
+
+  // ---------- Search / filters ----------
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    render();
+  });
+  document.getElementById("toggle-owned").addEventListener("click", () => {
+    filterMode = filterMode === "owned" ? "all" : "owned";
+    document.getElementById("toggle-owned").classList.toggle("active", filterMode==="owned");
+    document.getElementById("toggle-missing").classList.remove("active");
+    render();
+  });
+  document.getElementById("toggle-missing").addEventListener("click", () => {
+    filterMode = filterMode === "missing" ? "all" : "missing";
+    document.getElementById("toggle-missing").classList.toggle("active", filterMode==="missing");
+    document.getElementById("toggle-owned").classList.remove("active");
+    render();
+  });
+
+  // ---------- Import / export ----------
+  const modalBackdrop = document.getElementById("modal-backdrop");
+  const modalTextarea = document.getElementById("modal-textarea");
+  const modalTitle = document.getElementById("modal-title");
+  const modalDesc = document.getElementById("modal-desc");
+  const modalAction = document.getElementById("modal-action");
+  let modalMode = "export";
+
+  document.getElementById("btn-export").addEventListener("click", () => {
+    modalMode = "export";
+    modalTitle.textContent = "Export your collection";
+    modalDesc.textContent = "Copy this and paste it into a file in your GitLab repo (e.g. collection-backup.json) to back it up or move it to another device.";
+    modalTextarea.value = JSON.stringify(collection, null, 2);
+    modalTextarea.readOnly = true;
+    modalAction.textContent = "Copy to clipboard";
+    modalBackdrop.classList.add("open");
+  });
+  document.getElementById("btn-import").addEventListener("click", () => {
+    modalMode = "import";
+    modalTitle.textContent = "Import a collection";
+    modalDesc.textContent = "Paste JSON you previously exported. This replaces what's currently stored on this device.";
+    modalTextarea.value = "";
+    modalTextarea.readOnly = false;
+    modalAction.textContent = "Import";
+    modalBackdrop.classList.add("open");
+  });
+  document.getElementById("modal-cancel").addEventListener("click", () => modalBackdrop.classList.remove("open"));
+  modalAction.addEventListener("click", () => {
+    if (modalMode === "export"){
+      modalTextarea.select();
+      document.execCommand("copy");
+      modalAction.textContent = "Copied!";
+      setTimeout(() => { modalAction.textContent = "Copy to clipboard"; }, 1200);
+    } else {
+      try{
+        const parsed = JSON.parse(modalTextarea.value);
+        collection = parsed;
+        saveCollection();
+        render();
+        modalBackdrop.classList.remove("open");
+      }catch(e){
+        alert("That doesn't look like valid JSON. Check the format and try again.");
+      }
+    }
+  });
+
+  function renderSetJumpChips(){
+    const row = document.getElementById("set-jump-chips");
+    row.innerHTML = "";
+    allSetData.forEach(set => {
+      const chip = document.createElement("div");
+      chip.className = "chip";
+      chip.textContent = set.name.split(" ").map(w=>w[0]).join("").slice(0,4).toUpperCase();
+      chip.title = set.name;
+      chip.addEventListener("click", () => {
+        collapsedSets.delete(set.code);
+        render();
+        requestAnimationFrame(() => {
+          const target = [...setsContainer.children].find(el => el.dataset && el.dataset.setCode === set.code);
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+      row.appendChild(chip);
+    });
+  }
+
+  renderAspectChips();
+  loadAllSets();
+})();
+</script>
+</body>
+</html>
