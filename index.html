@@ -261,6 +261,9 @@
     background: var(--panel-raised);
     overflow:hidden;
   }
+  .card-art-wrap.landscape{
+    aspect-ratio: 7/5;
+  }
   .card-art-wrap img{
     width:100%; height:100%;
     object-fit: cover;
@@ -816,12 +819,13 @@
         const variantAbbrev = { "Normal": "N", "Foil": "F", "Hyperspace": "HS", "Hyperspace Foil": "HSF", "Showcase": "SC", "Prestige": "P", "Prestige Foil": "PF", "Prestige Serialized": "PS" };
         const badgeText = ownedVariants.map(v => variantAbbrev[v] || v).join(" ");
         const prestigeTag = card.IsPrestige ? `<span class="prestige-tag">★ Prestige</span>` : "";
+        const isLandscape = card.Type === "Leader" || card.Type === "Base";
 
         const tile = document.createElement("div");
         tile.className = "card-tile" + (owned ? " owned" : "");
         tile.style.setProperty("--card-color", color);
         tile.innerHTML = `
-          <div class="card-art-wrap">
+          <div class="card-art-wrap${isLandscape ? ' landscape' : ''}">
             <img loading="lazy" src="${card.FrontArt || ''}" alt="${card.Name}">
             <div class="qty-badge">${badgeText}</div>
             <div class="owned-badge"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
