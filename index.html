@@ -590,12 +590,11 @@
     ["sor", "Spark of Rebellion"],
     ["shd", "Shadows of the Galaxy"],
     ["twi", "Twilight of the Republic"],
-    ["jtl", "Jump to Lightspeed"]
-    // Remaining sets added one at a time as their local data is bundled.
-    // ["lof", "Legends of the Force"],
-    // ["sec", "Secrets of Power"],
-    // ["law", "A Lawless Time"],
-    // ["ash", "Ashes of the Empire"]
+    ["jtl", "Jump to Lightspeed"],
+    ["lof", "Legends of the Force"],
+    ["sec", "Secrets of Power"],
+    ["law", "A Lawless Time"],
+    ["ash", "Ashes of the Empire"]
   ];
 
   const ASPECT_COLOR = {
@@ -652,7 +651,7 @@
     throw lastErr;
   }
 
-  const LOCAL_SETS = new Set(["sor", "shd", "twi", "jtl"]); // sets with bundled local data in /data/
+  const LOCAL_SETS = new Set(["sor", "shd", "twi", "jtl", "lof", "sec", "law", "ash"]); // sets with bundled local data in /data/
 
   async function loadAllSets(){
     let lastError = null;
