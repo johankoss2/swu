@@ -629,6 +629,7 @@
   let searchTerm = "";
   let filterMode = "unowned"; // unowned (default) | owned
   let collapsedSets = new Set();
+  let activeSetFilter = null; // set code to exclusively show, or null for all sets
 
   const setsContainer = document.getElementById("sets-container");
   const statusLine = document.getElementById("status-line");
@@ -769,6 +770,7 @@
     }
 
     allSetData.forEach(set => {
+      if (activeSetFilter && set.code !== activeSetFilter) return;
       const filteredCards = set.cards.filter(matchesFilters);
       const ownedInSet = set.cards.filter(c => collection[c.cid] && collection[c.cid].length > 0).length;
       const totalInSet = set.cards.length;
@@ -968,16 +970,15 @@
     row.innerHTML = "";
     allSetData.forEach(set => {
       const chip = document.createElement("div");
-      chip.className = "chip";
+      chip.className = "chip" + (activeSetFilter === set.code ? " active" : "");
       chip.textContent = set.name.split(" ").map(w=>w[0]).join("").slice(0,4).toUpperCase();
       chip.title = set.name;
       chip.addEventListener("click", () => {
-        collapsedSets.delete(set.code);
+        activeSetFilter = (activeSetFilter === set.code) ? null : set.code;
+        if (activeSetFilter) collapsedSets.delete(set.code);
         render();
-        requestAnimationFrame(() => {
-          const target = [...setsContainer.children].find(el => el.dataset && el.dataset.setCode === set.code);
-          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
+        renderSetJumpChips();
+        window.scrollTo({ top: 0, behavior: "smooth" });
       });
       row.appendChild(chip);
     });
