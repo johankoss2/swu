@@ -414,36 +414,6 @@
     color: white;
     font-weight: 600;
   }
-  .price-section{
-    margin-top: .8rem;
-  }
-  .price-btn{
-    display:inline-block;
-    font-family:'JetBrains Mono',monospace;
-    font-size: .74rem;
-    padding: .5rem .8rem;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: var(--panel-raised);
-    color: var(--text-dim);
-    cursor:pointer;
-  }
-  .price-results{
-    margin-top: .6rem;
-    display:flex;
-    flex-wrap:wrap;
-    gap: .5rem;
-  }
-  .price-pill{
-    font-family:'JetBrains Mono',monospace;
-    font-size: .72rem;
-    padding: .4rem .65rem;
-    border-radius: 7px;
-    background: var(--panel-raised);
-    border: 1px solid var(--line);
-    color: var(--text);
-  }
-  .price-pill .label{ color: var(--text-faint); margin-right:.3rem; }
   .sheet-close{
     position:absolute;
     top: 1rem; right: 1.1rem;
@@ -582,7 +552,6 @@
 <div class="bottombar">
   <button class="bar-btn" id="btn-export">Export backup</button>
   <button class="bar-btn" id="btn-import">Import</button>
-  <button class="bar-btn" id="btn-export-prices">Export Prices</button>
 </div>
 
 <div class="sheet-backdrop" id="sheet-backdrop"></div>
@@ -596,9 +565,6 @@
       <p class="sheet-subtitle" id="sheet-subtitle"></p>
       <div class="sheet-tags" id="sheet-tags"></div>
       <div class="variant-chips" id="variant-chips"></div>
-      <div id="price-section" class="price-section">
-        <div class="price-btn" id="price-lookup-btn">Check Live Price</div>
-      </div>
     </div>
   </div>
 </div>
@@ -892,7 +858,6 @@
   let sheetCard = null;
   const sheetBackdrop = document.getElementById("sheet-backdrop");
   const sheet = document.getElementById("sheet");
-  const sessionPrices = {}; // cid -> price data fetched this session (in-memory only, not persisted)
 
   function renderVariantChips(card){
     const container = document.getElementById("variant-chips");
@@ -916,50 +881,6 @@
     });
   }
 
-  function renderPriceSection(card){
-    const section = document.getElementById("price-section");
-    const cached = sessionPrices[card.cid];
-    if (cached) {
-      const fields = [
-        ["Market", cached.MarketPrice],
-        ["Low", cached.LowPrice],
-        ["Foil", cached.FoilPrice],
-        ["Low Foil", cached.LowFoilPrice]
-      ].filter(([,v]) => v !== undefined && v !== null && v !== "");
-      const tcgLink = cached.tcgplayerId
-        ? `<a class="price-pill" href="https://www.tcgplayer.com/product/${cached.tcgplayerId}" target="_blank" rel="noopener" style="text-decoration:none;">View on TCGPlayer →</a>`
-        : "";
-      section.innerHTML = `
-        <div class="price-btn" id="price-lookup-btn">Refresh Price</div>
-        <div class="price-results">
-          ${fields.map(([label, val]) => `<div class="price-pill"><span class="label">${label}</span>$${val}</div>`).join("")}
-          ${fields.length === 0 ? '<div class="price-pill">No pricing found for this card</div>' : ''}
-          ${tcgLink}
-        </div>
-      `;
-    } else {
-      section.innerHTML = `<div class="price-btn" id="price-lookup-btn">Check Live Price</div>`;
-    }
-    document.getElementById("price-lookup-btn").addEventListener("click", () => fetchLivePrice(card));
-  }
-
-  async function fetchLivePrice(card){
-    const btn = document.getElementById("price-lookup-btn");
-    if (btn) btn.textContent = "Checking…";
-    try {
-      const apiUrl = `https://api.swu-db.com/cards/${card.Set}/${card.Number}`;
-      const proxiedUrl = `https://corsproxy.io/?url=${encodeURIComponent(apiUrl)}`;
-      const res = await fetchWithRetry(proxiedUrl, 2);
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const data = await res.json();
-      sessionPrices[card.cid] = data;
-    } catch (e) {
-      sessionPrices[card.cid] = {}; // mark as checked but empty, so we show "no pricing" instead of retrying silently
-      console.error("Price lookup failed", e);
-    }
-    renderPriceSection(card);
-  }
-
   function openSheet(card){
     sheetCard = card;
     document.getElementById("sheet-img").src = card.FrontArt || "";
@@ -975,7 +896,6 @@
       tags.appendChild(el);
     });
     renderVariantChips(card);
-    renderPriceSection(card);
     sheetBackdrop.classList.add("open");
     sheet.classList.add("open");
   }
@@ -1017,15 +937,6 @@
     modalAction.textContent = "Copy to clipboard";
     modalBackdrop.classList.add("open");
   });
-  document.getElementById("btn-export-prices").addEventListener("click", () => {
-    modalMode = "export-prices";
-    modalTitle.textContent = "Export session prices";
-    modalDesc.textContent = "Prices you've looked up this session (not saved between visits). Copy this before you close the tab if you want to keep it.";
-    modalTextarea.value = JSON.stringify(sessionPrices, null, 2);
-    modalTextarea.readOnly = true;
-    modalAction.textContent = "Copy to clipboard";
-    modalBackdrop.classList.add("open");
-  });
   document.getElementById("btn-import").addEventListener("click", () => {
     modalMode = "import";
     modalTitle.textContent = "Import a collection";
@@ -1037,7 +948,7 @@
   });
   document.getElementById("modal-cancel").addEventListener("click", () => modalBackdrop.classList.remove("open"));
   modalAction.addEventListener("click", () => {
-    if (modalMode === "export" || modalMode === "export-prices"){
+    if (modalMode === "export"){
       modalTextarea.select();
       document.execCommand("copy");
       modalAction.textContent = "Copied!";
