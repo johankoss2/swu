@@ -529,8 +529,7 @@
   <input type="search" id="search-input" placeholder="Search cards by name, trait, type…">
   <div class="chip-row" id="aspect-chips"></div>
   <div class="filter-toggle-row">
-    <div class="toggle-btn" id="toggle-owned">Owned only</div>
-    <div class="toggle-btn" id="toggle-missing">Plan (still need)</div>
+    <div class="toggle-btn" id="toggle-owned" style="width:100%">Show Collected</div>
   </div>
   <div class="chip-row" id="set-jump-chips"></div>
 </div>
@@ -617,7 +616,7 @@
   let allSetData = []; // [{code,name,cards:[]}]
   let activeAspects = new Set();
   let searchTerm = "";
-  let filterMode = "all"; // all | owned | missing
+  let filterMode = "unowned"; // unowned (default) | owned
   let collapsedSets = new Set();
 
   const setsContainer = document.getElementById("sets-container");
@@ -717,7 +716,7 @@
     }
     const owned = (collection[card.cid] && collection[card.cid].length > 0);
     if (filterMode === "owned" && !owned) return false;
-    if (filterMode === "missing" && owned) return false;
+    if (filterMode === "unowned" && owned) return false;
     return true;
   }
 
@@ -766,7 +765,7 @@
       totalOwned += ownedInSet;
       const pct = totalInSet ? Math.round(100 * ownedInSet / totalInSet) : 0;
 
-      if (filteredCards.length === 0 && (searchTerm || activeAspects.size || filterMode !== "all")) return;
+      if (filteredCards.length === 0 && (searchTerm || activeAspects.size)) return;
 
       const section = document.createElement("div");
       section.className = "set-section" + (collapsedSets.has(set.code) ? " collapsed" : "");
@@ -897,15 +896,10 @@
     render();
   });
   document.getElementById("toggle-owned").addEventListener("click", () => {
-    filterMode = filterMode === "owned" ? "all" : "owned";
-    document.getElementById("toggle-owned").classList.toggle("active", filterMode==="owned");
-    document.getElementById("toggle-missing").classList.remove("active");
-    render();
-  });
-  document.getElementById("toggle-missing").addEventListener("click", () => {
-    filterMode = filterMode === "missing" ? "all" : "missing";
-    document.getElementById("toggle-missing").classList.toggle("active", filterMode==="missing");
-    document.getElementById("toggle-owned").classList.remove("active");
+    filterMode = filterMode === "owned" ? "unowned" : "owned";
+    const btn = document.getElementById("toggle-owned");
+    btn.classList.toggle("active", filterMode === "owned");
+    btn.textContent = filterMode === "owned" ? "Show Not Yet Collected" : "Show Collected";
     render();
   });
 
