@@ -594,7 +594,8 @@
     ["lof", "Legends of the Force"],
     ["sec", "Secrets of Power"],
     ["law", "A Lawless Time"],
-    ["ash", "Ashes of the Empire"]
+    ["ash", "Ashes of the Empire"],
+    ["ts26", "Twin Suns 2026"]
   ];
 
   const ASPECT_COLOR = {
@@ -651,7 +652,7 @@
     throw lastErr;
   }
 
-  const LOCAL_SETS = new Set(["sor", "shd", "twi", "jtl", "lof", "sec", "law", "ash"]); // sets with bundled local data in /data/
+  const LOCAL_SETS = new Set(["sor", "shd", "twi", "jtl", "lof", "sec", "law", "ash", "ts26"]); // sets with bundled local data in /data/
 
   async function loadAllSets(){
     let lastError = null;
