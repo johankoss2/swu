@@ -679,6 +679,7 @@
           return numA - numB;
         });
         allSetData.push({ code, name, cards });
+        collapsedSets.add(code); // sets start collapsed by default
       }catch(e){
         lastError = e && e.message ? e.message : String(e);
         console.error("Failed to load set", code, e);
