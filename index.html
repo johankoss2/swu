@@ -312,6 +312,14 @@
     overflow:hidden;
     text-overflow: ellipsis;
   }
+  .prestige-tag{
+    display:block;
+    font-family:'JetBrains Mono',monospace;
+    font-size: .6rem;
+    color: var(--cunning);
+    margin-bottom: .3rem;
+    letter-spacing: .02em;
+  }
   .card-meta{
     font-family:'JetBrains Mono',monospace;
     font-size: .64rem;
@@ -805,8 +813,9 @@
         const owned = ownedVariants.length > 0;
         const color = cardColor(card);
         const rColor = RARITY_COLOR[card.Rarity] || "#8a919c";
-        const variantAbbrev = { "Normal": "N", "Foil": "F", "Hyperspace": "HS", "Hyperspace Foil": "HSF", "Showcase": "SC" };
+        const variantAbbrev = { "Normal": "N", "Foil": "F", "Hyperspace": "HS", "Hyperspace Foil": "HSF", "Showcase": "SC", "Prestige": "P", "Prestige Foil": "PF", "Prestige Serialized": "PS" };
         const badgeText = ownedVariants.map(v => variantAbbrev[v] || v).join(" ");
+        const prestigeTag = card.IsPrestige ? `<span class="prestige-tag">★ Prestige</span>` : "";
 
         const tile = document.createElement("div");
         tile.className = "card-tile" + (owned ? " owned" : "");
@@ -819,6 +828,7 @@
           </div>
           <div class="card-info">
             <p class="card-name">${card.Name}</p>
+            ${prestigeTag}
             <div class="card-meta">
               <span><span class="rarity-dot" style="background:${rColor}"></span>${card.Rarity || ""}</span>
               <span>${card.Cost !== undefined && card.Cost !== "" ? "⬡"+card.Cost : ""}</span>
@@ -872,7 +882,7 @@
     document.getElementById("sheet").style.setProperty("--card-sheet-color", cardColor(card));
     const tags = document.getElementById("sheet-tags");
     tags.innerHTML = "";
-    [card.Set + " · " + card.Number, card.Type, card.Rarity, ...(card.Aspects||[])].filter(Boolean).forEach(t => {
+    [card.Set + " · " + card.Number, card.Type, card.Rarity, card.IsPrestige ? "★ Prestige" : null, ...(card.Aspects||[])].filter(Boolean).forEach(t => {
       const el = document.createElement("span");
       el.className = "sheet-tag";
       el.textContent = t;
