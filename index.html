@@ -629,7 +629,7 @@
   let searchTerm = "";
   let filterMode = "unowned"; // unowned (default) | owned
   let collapsedSets = new Set();
-  let activeSetFilter = null; // set code to exclusively show, or null for all sets
+  let activeSetFilters = new Set(); // set codes to exclusively show; empty = show all
 
   const setsContainer = document.getElementById("sets-container");
   const statusLine = document.getElementById("status-line");
@@ -770,7 +770,7 @@
     }
 
     allSetData.forEach(set => {
-      if (activeSetFilter && set.code !== activeSetFilter) return;
+      if (activeSetFilters.size > 0 && !activeSetFilters.has(set.code)) return;
       const filteredCards = set.cards.filter(matchesFilters);
       const ownedInSet = set.cards.filter(c => collection[c.cid] && collection[c.cid].length > 0).length;
       const totalInSet = set.cards.length;
@@ -968,14 +968,15 @@
   function renderSetJumpChips(){
     const row = document.getElementById("set-jump-chips");
     row.innerHTML = "";
-    allSetData.forEach(set => {
+    SETS.forEach(([code, name]) => {
       const chip = document.createElement("div");
-      chip.className = "chip" + (activeSetFilter === set.code ? " active" : "");
-      chip.textContent = set.name.split(" ").map(w=>w[0]).join("").slice(0,4).toUpperCase();
-      chip.title = set.name;
+      chip.className = "chip" + (activeSetFilters.has(code) ? " active" : "");
+      chip.textContent = name.split(" ").map(w=>w[0]).join("").slice(0,4).toUpperCase();
+      chip.title = name;
       chip.addEventListener("click", () => {
-        activeSetFilter = (activeSetFilter === set.code) ? null : set.code;
-        if (activeSetFilter) collapsedSets.delete(set.code);
+        if (activeSetFilters.has(code)) activeSetFilters.delete(code);
+        else activeSetFilters.add(code);
+        collapsedSets.delete(code);
         render();
         renderSetJumpChips();
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -985,6 +986,7 @@
   }
 
   renderAspectChips();
+  renderSetJumpChips();
   loadAllSets();
 })();
 </script>
