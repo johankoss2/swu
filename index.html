@@ -577,9 +577,9 @@
 
   // Sets to load, in release order. Code -> display name.
   const SETS = [
-    ["sor", "Spark of Rebellion"]
-    // Other sets temporarily disabled while we debug loading.
-    // ["shd", "Shadows of the Galaxy"],
+    ["sor", "Spark of Rebellion"],
+    ["shd", "Shadows of the Galaxy"]
+    // Remaining sets added one at a time as their local data is bundled.
     // ["twi", "Twilight of the Republic"],
     // ["jtl", "Jump to Lightspeed"],
     // ["lof", "Legends of the Force"],
@@ -641,7 +641,7 @@
     throw lastErr;
   }
 
-  const LOCAL_SETS = new Set(["sor"]); // sets with bundled local data in /data/
+  const LOCAL_SETS = new Set(["sor", "shd"]); // sets with bundled local data in /data/
 
   async function loadAllSets(){
     let lastError = null;
