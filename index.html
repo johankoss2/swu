@@ -525,7 +525,7 @@
 <body>
 
 <header class="hero">
-  <div class="eyebrow-row"><span class="dot"></span><span>HOLOTABLE · COLLECTION LOG</span></div>
+  <div class="eyebrow-row"><span class="dot"></span><span>HOLOTABLE · COLLECTION LOG</span><span style="margin-left:auto;">v1.0</span></div>
   <h1 class="title">Star Wars: Unlimited
     <span class="sub">Your collection, catalogued by set.</span>
   </h1>
@@ -596,7 +596,8 @@
     ["sec", "Secrets of Power"],
     ["law", "A Lawless Time"],
     ["ts26", "Twin Suns 2026"],
-    ["ash", "Ashes of the Empire"]
+    ["ash", "Ashes of the Empire"],
+    ["hmw", "Homeworlds"]
   ];
 
   const ASPECT_COLOR = {
@@ -653,7 +654,7 @@
     throw lastErr;
   }
 
-  const LOCAL_SETS = new Set(["sor", "shd", "twi", "jtl", "lof", "sec", "law", "ash", "ts26", "ibh"]); // sets with bundled local data in /data/
+  const LOCAL_SETS = new Set(["sor", "shd", "twi", "jtl", "lof", "sec", "law", "ash", "ts26", "ibh", "hmw"]); // sets with bundled local data in /data/
 
   async function loadAllSets(){
     let lastError = null;
