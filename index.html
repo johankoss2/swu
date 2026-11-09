@@ -973,7 +973,7 @@
     SETS.forEach(([code, name]) => {
       const chip = document.createElement("div");
       chip.className = "chip" + (activeSetFilters.has(code) ? " active" : "");
-      chip.textContent = name.split(" ").map(w=>w[0]).join("").slice(0,4).toUpperCase();
+      chip.textContent = code.toUpperCase();
       chip.title = name;
       chip.addEventListener("click", () => {
         if (activeSetFilters.has(code)) activeSetFilters.delete(code);
